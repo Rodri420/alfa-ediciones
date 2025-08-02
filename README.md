@@ -125,5 +125,4 @@ erDiagram
         string estado "Estado del cliente (APTO, INCOBRABLE, etc.)"
         string hoja "Nombre de la hoja de Excel de origen"
     }
-```# alfa-ediciones
-# alfa-ediciones
+```
