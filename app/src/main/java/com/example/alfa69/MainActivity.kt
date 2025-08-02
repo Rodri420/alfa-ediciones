@@ -1000,8 +1000,12 @@ fun PdfScreen(onBackClick: () -> Unit) {
 
 @Composable
 fun ClientDataScreen(onBackClick: () -> Unit) {
-    var dni by remember { mutableStateOf("") }
+    var numeroEquipo by remember { mutableStateOf("") }
     var nombreApellido by remember { mutableStateOf("") }
+    var dni by remember { mutableStateOf("") }
+    var cargo by remember { mutableStateOf("") }
+    var provincia by remember { mutableStateOf("") }
+    var celular by remember { mutableStateOf("") }
     var metodoPago by remember { mutableStateOf("") }
 
     Column(
@@ -1031,6 +1035,27 @@ fun ClientDataScreen(onBackClick: () -> Unit) {
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(32.dp))
+                
+                // 1. Número de equipo
+                OutlinedTextField(
+                    value = numeroEquipo,
+                    onValueChange = { numeroEquipo = it },
+                    label = { Text("Número de equipo") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 2. Nombre y Apellido
+                OutlinedTextField(
+                    value = nombreApellido,
+                    onValueChange = { nombreApellido = it },
+                    label = { Text("Nombre y Apellido") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 3. DNI
                 OutlinedTextField(
                     value = dni,
                     onValueChange = { dni = it.filter { c -> c.isDigit() } },
@@ -1039,13 +1064,36 @@ fun ClientDataScreen(onBackClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // 4. Cargo
                 OutlinedTextField(
-                    value = nombreApellido,
-                    onValueChange = { nombreApellido = it },
-                    label = { Text("Nombre y Apellido") },
+                    value = cargo,
+                    onValueChange = { cargo = it },
+                    label = { Text("Cargo") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                
+                // 5. Provincia
+                OutlinedTextField(
+                    value = provincia,
+                    onValueChange = { provincia = it },
+                    label = { Text("Provincia") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 6. Celular
+                OutlinedTextField(
+                    value = celular,
+                    onValueChange = { celular = it.filter { c -> c.isDigit() } },
+                    label = { Text("Celular") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 7. Método de pago
                 OutlinedTextField(
                     value = metodoPago,
                     onValueChange = { metodoPago = it },
@@ -1053,6 +1101,7 @@ fun ClientDataScreen(onBackClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(32.dp))
+                
                 Button(
                     onClick = { /* TODO: Acción de enviar */ },
                     shape = RoundedCornerShape(25.dp),
