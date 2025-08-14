@@ -2,12 +2,12 @@
   // 1) Configurar Firebase Web
   // Reemplaza el siguiente objeto con tu configuración de Firebase (Firebase Console -> Project settings -> Your apps -> Web app)
   const firebaseConfig = {
-    apiKey: "REEMPLAZAR",
-    authDomain: "REEMPLAZAR",
-    projectId: "REEMPLAZAR",
-    storageBucket: "REEMPLAZAR",
-    messagingSenderId: "REEMPLAZAR",
-    appId: "REEMPLAZAR"
+    apiKey: "",
+    authDomain: "alfa-206d1.firebaseapp.com",
+    projectId: "alfa-206d1",
+    storageBucket: "alfa-206d1.firebasestorage.app",
+    messagingSenderId: "601425549469",
+    appId: ""
   };
 
   try {
