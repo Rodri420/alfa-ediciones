@@ -287,6 +287,74 @@ graph TD
 
 ---
 
+## Uso en navegador (versión web mínima)
+
+Se agregó una versión web simple en `web/` para usar las funciones principales en cualquier navegador:
+
+- **Búsqueda de incobrables** contra Firestore (`colección clientes`)
+- **Calculadora de CUIL** (misma lógica que la app)
+- **Enlaces rápidos** a BCRA y ANSES
+
+### 1) Configurar Firebase Web
+
+1. En Firebase Console, crea una **app Web** y copia la configuración.
+2. Abre `web/app.js` y reemplaza el objeto `firebaseConfig` con tus valores.
+3. En Firestore, crea la colección `clientes` con documentos que tengan los campos: `dni` (string), `nombre` (string), `estado` (string), `hoja` (string).
+
+Reglas mínimas (ajusta a tus necesidades):
+
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2099, 1, 1);
+    }
+  }
+}
+```
+
+### 2) Probar en local
+
+Con Node.js instalado, sirve la carpeta `web/` con un servidor estático:
+
+```bash
+cd web
+npx --yes serve -l 5173
+```
+
+Abre `http://localhost:5173` y prueba búsqueda y cálculo de CUIL.
+
+Si no tienes Node, puedes abrir `web/index.html` en el navegador, pero se recomienda servidor local.
+
+### 3) Desplegar en Firebase Hosting (opcional)
+
+```bash
+npm i -g firebase-tools
+firebase login
+firebase init hosting   # selecciona el proyecto, usa "web" como carpeta pública, single-page: No
+firebase deploy
+```
+
+### 4) Sincronizar datos desde Android a Firestore (opcional)
+
+Para que la web tenga los mismos datos que la app, sube a Firestore cuando insertes clientes. Ejemplo (conceptual):
+
+```kotlin
+val db = FirebaseFirestore.getInstance()
+db.collection("clientes").document(cliente.dni)
+  .set(mapOf(
+    "dni" to cliente.dni,
+    "nombre" to cliente.nombre,
+    "estado" to cliente.estado,
+    "hoja" to cliente.hoja
+  ), SetOptions.merge())
+```
+
+Puedes agregar esta escritura junto a tus llamadas actuales a `clienteDao.insertarCliente(s)`.
+
+---
+
 ## Contacto y Soporte
 
 Para implementar la infraestructura en la nube o resolver dudas técnicas, contactar al equipo de desarrollo.
