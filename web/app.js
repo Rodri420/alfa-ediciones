@@ -91,7 +91,11 @@
         if (results.length === 0) {
           resultadoVenta.textContent = 'No se encontraron ventas para ese DNI.';
         } else {
-          resultadoVenta.innerHTML = results.map(r => `${r.col}: ${r.data.vendedorNombre || ''} - ${r.data.importeTotal || ''} - ${r.data.valorCuota || ''}`).join('<br/>');
+          resultadoVenta.innerHTML = results.map(r => {
+            const aps = Array.isArray(r.data.apartados) ? r.data.apartados.join(', ') : (r.data.apartado || '');
+            const dev = r.data.devolucion ? `<br/>Devolución: ${r.data.devolucion}` : '';
+            return `${r.col}: ${r.data.vendedorNombre || ''} - ${r.data.importeTotal || ''} - ${r.data.valorCuota || ''}${aps ? ' - ' + aps : ''}${dev}`;
+          }).join('<br/>');
         }
       } catch (e) {
         resultadoVenta.textContent = 'Error: ' + (e?.message || e);
@@ -116,12 +120,17 @@
       if (!db) { estadoCarga.textContent = 'Firestore no está configurado.'; return; }
       const dni = sanitizeDni(document.getElementById('dniCarga').value);
       const nombre = document.getElementById('nombreCarga').value.trim();
+      const numeroEquipo = document.getElementById('numeroEquipo').value.trim();
+      const cargo = document.getElementById('cargo').value.trim();
+      const provincia = document.getElementById('provincia').value.trim();
+      const celular = document.getElementById('celular').value.trim();
       const vendedorNombre = document.getElementById('vendedorNombre').value.trim();
+      const vendedorCodigo = document.getElementById('vendedorCodigo').value.trim();
       const importeTotal = Number(document.getElementById('importeTotal').value || 0);
       const valorCuota = Number(document.getElementById('valorCuota').value || 0);
       const metodo = metodoPago.value;
       if (!dni || !nombre || !vendedorNombre) { estadoCarga.textContent = 'Complete DNI, Nombre y Vendedor'; return; }
-      const comunes = { dni, nombre, vendedorNombre, importeTotal, valorCuota, fechaCreacion: Date.now() };
+      const comunes = { dni, nombreApellido: nombre, numeroEquipo, cargo, provincia, celular, vendedorNombre, vendedorCodigo, importeTotal, valorCuota, fechaCreacion: Date.now() };
       if (metodo === 'CBU') {
         const cbu = document.getElementById('cbu').value.trim();
         await db.collection('Debito').add({ ...comunes, cbu });
@@ -249,24 +258,54 @@
         const nombre = it.nombreApellido || '';
         const dni = it.dni || '';
         const numEquipo = it.numeroEquipo || '';
+        const cargo = it.cargo || '';
+        const provincia = it.provincia || '';
+        const celular = it.celular || '';
+        const vendedorNombreItem = it.vendedorNombre || '';
+        const vendedorCodigo = it.vendedorCodigo || '';
+        const importeTotal = it.importeTotal || '';
+        const valorCuota = it.valorCuota || '';
+        const cbu = it.cbu || '';
+        const numeroTarjeta = it.numeroTarjeta || '';
+        const fechaVencimiento = it.fechaVencimiento || '';
+        const codigoTarjeta = it.codigoTarjeta || '';
+        const fechaVenta = it.fechaVenta || '';
         const apto = !!it.apto;
-        const preApartado = it.apartado || (item.collection === 'Debito' ? 'CBU' : item.collection === 'tarjeta' ? 'Tarjeta' : 'MercadoPago');
+        const preApartados = Array.isArray(it.apartados)
+          ? it.apartados
+          : (it.apartado ? [it.apartado] : [item.collection === 'Debito' ? 'CBU' : item.collection === 'tarjeta' ? 'Tarjeta' : 'MercadoPago']);
+        const devolucion = it.devolucion || '';
         div.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:6px">
             ${nombre ? `<div><strong>${nombre}</strong></div>` : ''}
             ${dni ? `<div>DNI: ${dni}</div>` : ''}
             ${numEquipo ? `<div>N° Equipo: ${numEquipo}</div>` : ''}
+            ${cargo ? `<div>Cargo: ${cargo}</div>` : ''}
+            ${provincia ? `<div>Provincia: ${provincia}</div>` : ''}
+            ${celular ? `<div>Celular: ${celular}</div>` : ''}
+            ${vendedorNombreItem ? `<div>Vendedor: ${vendedorNombreItem}</div>` : ''}
+            ${vendedorCodigo ? `<div>Código Vendedor: ${vendedorCodigo}</div>` : ''}
+            ${importeTotal ? `<div>Importe Total: ${importeTotal}</div>` : ''}
+            ${valorCuota ? `<div>Valor Cuota: ${valorCuota}</div>` : ''}
+            ${cbu ? `<div>CBU: ${cbu}</div>` : ''}
+            ${numeroTarjeta ? `<div>Tarjeta: ${numeroTarjeta}</div>` : ''}
+            ${fechaVencimiento ? `<div>Venc.: ${fechaVencimiento}</div>` : ''}
+            ${codigoTarjeta ? `<div>CVV: ${codigoTarjeta}</div>` : ''}
+            ${fechaVenta ? `<div>Fecha Venta: ${fechaVenta}</div>` : ''}
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span>APTO:</span>
               <label><input type="radio" name="apto-${item.id}" value="si" ${apto ? 'checked' : ''}/> Sí</label>
               <label><input type="radio" name="apto-${item.id}" value="no" ${!apto ? 'checked' : ''}/> No</label>
             </div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-              <span>Apartado:</span>
-              <label><input type="radio" name="apartado-${item.id}" value="CBU" ${preApartado==='CBU'?'checked':''}/> CBU</label>
-              <label><input type="radio" name="apartado-${item.id}" value="Tarjeta" ${preApartado==='Tarjeta'?'checked':''}/> Tarjeta</label>
-              <label><input type="radio" name="apartado-${item.id}" value="MercadoPago" ${preApartado==='MercadoPago'?'checked':''}/> Mercado Pago</label>
-              <label><input type="radio" name="apartado-${item.id}" value="Consultar por editorial" ${preApartado==='Consultar por editorial'?'checked':''}/> Consultar por editorial</label>
+              <span>Apartados:</span>
+              <label><input type="checkbox" name="apartados-${item.id}" value="CBU" ${preApartados.includes('CBU')?'checked':''}/> CBU</label>
+              <label><input type="checkbox" name="apartados-${item.id}" value="Tarjeta" ${preApartados.includes('Tarjeta')?'checked':''}/> Tarjeta</label>
+              <label><input type="checkbox" name="apartados-${item.id}" value="MercadoPago" ${preApartados.includes('MercadoPago')?'checked':''}/> Mercado Pago</label>
+              <label><input type="checkbox" name="apartados-${item.id}" value="Consultar por editorial" ${preApartados.includes('Consultar por editorial')?'checked':''}/> Consultar por editorial</label>
+            </div>
+            <div>
+              <textarea id="devolucion-${item.id}" rows="3" style="width:100%" placeholder="Devolución del administrador...">${devolucion}</textarea>
             </div>
             <div class="row right"><button class="primary" id="save-${item.id}">Guardar</button></div>
             <div class="result" id="msg-${item.id}"></div>
@@ -274,31 +313,16 @@
         `;
         adminClientsContainer.appendChild(div);
         const radiosApto = div.querySelectorAll(`input[name="apto-${item.id}"]`);
-        const radiosApartado = div.querySelectorAll(`input[name="apartado-${item.id}"]`);
-        // Deshabilitar métodos si no apto
-        function updateMethodsEnabled() {
-          const aptoSel = Array.from(radiosApto).some(r => r.checked && r.value==='si');
-          radiosApartado.forEach(r => {
-            const isPayment = ['CBU','Tarjeta','MercadoPago'].includes(r.value);
-            r.disabled = !aptoSel && isPayment;
-            if (r.disabled && r.checked) r.checked = false;
-          });
-        }
-        radiosApto.forEach(r => r.addEventListener('change', updateMethodsEnabled));
-        updateMethodsEnabled();
+        const checksApartados = div.querySelectorAll(`input[name="apartados-${item.id}"]`);
         const msg = div.querySelector(`#msg-${item.id}`);
+        const devInput = div.querySelector(`#devolucion-${item.id}`);
         div.querySelector(`#save-${item.id}`)?.addEventListener('click', async () => {
           try {
             let aptoSel = true;
             radiosApto.forEach(r => { if (r.checked && r.value==='no') aptoSel = false; });
-            let apartadoSel = '';
-            radiosApartado.forEach(r => { if (r.checked) apartadoSel = r.value; });
-            if (!aptoSel && (apartadoSel==='CBU' || apartadoSel==='Tarjeta' || apartadoSel==='MercadoPago')) {
-              apartadoSel = '';
-              // reflejar la lógica Android: si no apto, limpiar apartado de pago
-              radiosApartado.forEach(r => { r.checked = (r.value===''); });
-            }
-            await db.collection(item.collection).doc(item.id).set({ apto: aptoSel, apartado: apartadoSel }, { merge: true });
+            const apartadosSel = Array.from(checksApartados).filter(c => c.checked).map(c => c.value);
+            const devolucionVal = devInput.value.trim();
+            await db.collection(item.collection).doc(item.id).set({ apto: aptoSel, apartados: apartadosSel, devolucion: devolucionVal }, { merge: true });
             msg.textContent = 'Guardado';
           } catch (e) {
             msg.textContent = 'Error: ' + (e?.message || e);
