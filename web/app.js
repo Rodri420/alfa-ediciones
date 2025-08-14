@@ -94,7 +94,8 @@
           resultadoVenta.innerHTML = results.map(r => {
             const aps = Array.isArray(r.data.apartados) ? r.data.apartados.join(', ') : (r.data.apartado || '');
             const dev = r.data.devolucion ? `<br/>Devolución: ${r.data.devolucion}` : '';
-            return `${r.col}: ${r.data.vendedorNombre || ''} - ${r.data.importeTotal || ''} - ${r.data.valorCuota || ''}${aps ? ' - ' + aps : ''}${dev}`;
+            const apt = (r.data.apto === false) ? ' - No apto venta' : '';
+            return `${r.col}: ${r.data.vendedorNombre || ''} - ${r.data.importeTotal || ''} - ${r.data.valorCuota || ''}${aps ? ' - ' + aps : ''}${apt}${dev}`;
           }).join('<br/>');
         }
       } catch (e) {
