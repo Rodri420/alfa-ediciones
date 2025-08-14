@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "alfa-206d1",
     "public": "web",
     "ignore": [
       "firebase.json",
@@ -16,5 +17,7 @@
     ]
   }
 }
+
+
 
 
