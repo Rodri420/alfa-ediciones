@@ -4,48 +4,147 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alfa Ediciones - Web</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=1" />
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script defer src="app.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script defer src="app.js?v=1"></script>
 </head>
 <body>
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="brand">Alfa Ediciones</div>
+            <nav class="menu">
+                <button data-nav="home">Inicio</button>
+                <button data-nav="menu">Menú</button>
+                <button data-nav="admin">Admin</button>
+            </nav>
+        </div>
+    </header>
+
     <main class="container">
-        <h1>Alfa Ediciones</h1>
-
-        <section class="card">
-            <h2>Búsqueda Incobrables</h2>
-            <div class="row">
-                <input id="dniInput" type="text" inputmode="numeric" maxlength="8" placeholder="DNI (sin puntos)" />
-                <button id="buscarBtn">Buscar</button>
+        <section id="screen-home" class="screen active">
+            <div class="card center">
+                <h1>Alfa Ediciones</h1>
+                <button class="primary" data-go="menu">Ingresar</button>
             </div>
-            <div id="resultadoBusqueda" class="result"></div>
         </section>
 
-        <section class="card">
-            <h2>Calcular CUIL</h2>
-            <div class="row">
-                <input id="dniCuil" type="text" inputmode="numeric" maxlength="8" placeholder="DNI (sin puntos)" />
-                <select id="genero">
-                    <option>Masculino</option>
-                    <option>Femenino</option>
-                </select>
-                <button id="calcularBtn">Calcular</button>
+        <section id="screen-menu" class="screen">
+            <div class="card grid">
+                <button class="primary" data-go="cuil">Sacar CUIL</button>
+                <a class="secondary" href="https://www.bcra.gob.ar/BCRAyVos/Situacion_Crediticia.asp" target="_blank" rel="noopener">Situación 5</a>
+                <a class="secondary" href="https://servicioswww.anses.gob.ar/censite/index.aspx" target="_blank" rel="noopener">Negativa ANSES</a>
+                <button class="primary" data-go="venta">Estado de venta</button>
+                <button class="success" data-go="cargar">Cargar datos clientes</button>
+                <button class="danger" data-go="admin">Administrador</button>
+                <button class="secondary" data-go="pdf">Crear PDF</button>
             </div>
-            <div id="resultadoCuil" class="result"></div>
+            <div id="lockBanner" class="banner" hidden>La aplicación está bloqueada globalmente.</div>
         </section>
 
-        <section class="card links">
-            <a href="https://www.bcra.gob.ar/BCRAyVos/Situacion_Crediticia.asp" target="_blank" rel="noopener noreferrer">Situación 5 (BCRA)</a>
-            <a href="https://servicioswww.anses.gob.ar/censite/index.aspx" target="_blank" rel="noopener noreferrer">Negativa ANSES</a>
+        <section id="screen-cuil" class="screen">
+            <div class="card">
+                <h2>Cálculo de CUIL</h2>
+                <div class="row">
+                    <input id="dniCuil" type="text" inputmode="numeric" maxlength="8" placeholder="DNI (sin puntos)" />
+                    <select id="genero">
+                        <option>Masculino</option>
+                        <option>Femenino</option>
+                    </select>
+                    <button id="calcularBtn">Calcular</button>
+                </div>
+                <div id="resultadoCuil" class="result"></div>
+                <div class="row right"><button data-go="menu">Volver</button></div>
+            </div>
         </section>
 
-        <section class="card note">
-            <p>
-                Para que la búsqueda funcione, pega tu configuración de Firebase Web en <code>web/app.js</code>
-                y carga la colección <code>clientes</code> en Firestore con documentos con campos
-                <code>dni</code>, <code>nombre</code>, <code>estado</code>, <code>hoja</code>.
-            </p>
+        <section id="screen-venta" class="screen">
+            <div class="card">
+                <h2>Estado de venta</h2>
+                <div class="row">
+                    <input id="dniVenta" type="text" inputmode="numeric" maxlength="8" placeholder="DNI" />
+                    <button id="buscarVentaBtn">Buscar</button>
+                </div>
+                <div id="resultadoVenta" class="result"></div>
+                <div class="row right"><button data-go="menu">Volver</button></div>
+            </div>
+        </section>
+
+        <section id="screen-cargar" class="screen">
+            <div class="card">
+                <h2>Cargar datos clientes</h2>
+                <div class="row">
+                    <input id="dniCarga" placeholder="DNI" />
+                    <input id="nombreCarga" placeholder="Nombre" />
+                    <input id="vendedorNombre" placeholder="Vendedor" />
+                </div>
+                <div class="row">
+                    <input id="importeTotal" type="number" step="0.01" placeholder="Importe total" />
+                    <input id="valorCuota" type="number" step="0.01" placeholder="Valor cuota" />
+                    <select id="metodoPago">
+                        <option>CBU</option>
+                        <option>Tarjeta</option>
+                        <option>MercadoPago</option>
+                    </select>
+                </div>
+                <div id="pagoCBU" class="row">
+                    <input id="cbu" placeholder="CBU" />
+                </div>
+                <div id="pagoTarjeta" class="row" hidden>
+                    <input id="numeroTarjeta" placeholder="Número de tarjeta" />
+                    <input id="fechaVencimiento" placeholder="MM/AA" />
+                    <input id="codigoTarjeta" placeholder="CVV" />
+                </div>
+                <div id="pagoMP" class="row" hidden>
+                    <input id="fechaVenta" type="date" />
+                </div>
+                <div class="row right">
+                    <button id="guardarCargaBtn" class="primary">Guardar</button>
+                    <button data-go="menu">Volver</button>
+                </div>
+                <div id="estadoCarga" class="result"></div>
+            </div>
+        </section>
+
+        <section id="screen-pdf" class="screen">
+            <div class="card center">
+                <h2>Crear PDF</h2>
+                <button id="crearPdfBtn" class="primary">Crear ejemplo.pdf</button>
+                <div id="pdfStatus" class="result"></div>
+                <div class="row right"><button data-go="menu">Volver</button></div>
+            </div>
+        </section>
+
+        <section id="screen-admin-login" class="screen">
+            <div class="card">
+                <h2>Ingreso Administrador</h2>
+                <div class="row">
+                    <input id="adminPasswordInput" type="password" placeholder="Contraseña" />
+                    <button id="adminLoginBtn" class="danger">Ingresar</button>
+                </div>
+                <div id="adminLoginMsg" class="result"></div>
+                <div class="row right"><button data-go="menu">Volver</button></div>
+            </div>
+        </section>
+
+        <section id="screen-admin-panel" class="screen">
+            <div class="card">
+                <h2>Panel de Administrador</h2>
+                <div class="row">
+                    <button id="toggleLockBtn" class="danger">Bloquear/Desbloquear app</button>
+                </div>
+                <div class="row">
+                    <input id="newAdminPass" type="password" placeholder="Nueva contraseña" />
+                    <button id="setAdminPassBtn">Cambiar contraseña</button>
+                </div>
+                <div class="row">
+                    <button id="listarVentasBtn">Listar ventas</button>
+                </div>
+                <div id="adminPanelMsg" class="result"></div>
+                <div id="ventasListado" class="result"></div>
+                <div class="row right"><button data-go="menu">Volver</button></div>
+            </div>
         </section>
     </main>
 </body>
