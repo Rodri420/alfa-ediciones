@@ -384,21 +384,23 @@
     }
   });
 
-  // Resetear datos (borra Debito y tarjeta; deja MP igual que app o ajusta aquí)
+  // Resetear datos de clientes (borra Debito, tarjeta y mercadopago) con lotes <= 400
   resetDatosBtn?.addEventListener('click', async () => {
     try {
       adminPanelMsg.textContent = 'Reseteando datos...';
-      for (const col of ['Debito','tarjeta']) {
+      let totalBorrados = 0;
+      for (const col of ['Debito','tarjeta','mercadopago']) {
         const snap = await db.collection(col).get();
-        const batchOps = [];
-        snap.forEach(d => batchOps.push(d.ref));
-        while (batchOps.length) {
+        const refs = snap.docs.map(d => d.ref);
+        while (refs.length) {
+          const chunk = refs.splice(0, 400);
           const batch = db.batch();
-          batchOps.splice(0, 400).forEach(ref => batch.delete(ref));
+          chunk.forEach(ref => batch.delete(ref));
           await batch.commit();
+          totalBorrados += chunk.length;
         }
       }
-      adminPanelMsg.textContent = 'Datos reseteados';
+      adminPanelMsg.textContent = `Datos reseteados. Documentos borrados: ${totalBorrados}`;
     } catch (e) {
       adminPanelMsg.textContent = 'Error al resetear: ' + (e?.message || e);
     }
