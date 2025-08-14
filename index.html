@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alfa Ediciones - Web</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script defer src="app.js"></script>
+</head>
+<body>
+    <main class="container">
+        <h1>Alfa Ediciones</h1>
+
+        <section class="card">
+            <h2>Búsqueda Incobrables</h2>
+            <div class="row">
+                <input id="dniInput" type="text" inputmode="numeric" maxlength="8" placeholder="DNI (sin puntos)" />
+                <button id="buscarBtn">Buscar</button>
+            </div>
+            <div id="resultadoBusqueda" class="result"></div>
+        </section>
+
+        <section class="card">
+            <h2>Calcular CUIL</h2>
+            <div class="row">
+                <input id="dniCuil" type="text" inputmode="numeric" maxlength="8" placeholder="DNI (sin puntos)" />
+                <select id="genero">
+                    <option>Masculino</option>
+                    <option>Femenino</option>
+                </select>
+                <button id="calcularBtn">Calcular</button>
+            </div>
+            <div id="resultadoCuil" class="result"></div>
+        </section>
+
+        <section class="card links">
+            <a href="https://www.bcra.gob.ar/BCRAyVos/Situacion_Crediticia.asp" target="_blank" rel="noopener noreferrer">Situación 5 (BCRA)</a>
+            <a href="https://servicioswww.anses.gob.ar/censite/index.aspx" target="_blank" rel="noopener noreferrer">Negativa ANSES</a>
+        </section>
+
+        <section class="card note">
+            <p>
+                Para que la búsqueda funcione, pega tu configuración de Firebase Web en <code>web/app.js</code>
+                y carga la colección <code>clientes</code> en Firestore con documentos con campos
+                <code>dni</code>, <code>nombre</code>, <code>estado</code>, <code>hoja</code>.
+            </p>
+        </section>
+    </main>
+</body>
+</html>
+
+
