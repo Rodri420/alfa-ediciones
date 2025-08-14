@@ -238,20 +238,14 @@
     }
   });
 
-  // Admin: gestionar clientes (igual que AdminClientsScreen)
+  // Admin: gestionar clientes en tiempo real (igual que AdminClientsScreen)
   const adminClientsContainer = document.getElementById('adminClientsContainer');
-  async function loadAdminClients() {
-    if (!db) { adminClientsContainer.textContent = 'Firestore no configurado'; return; }
-    adminClientsContainer.innerHTML = 'Cargando...';
-    try {
-      const tmp = [];
-      for (const col of ['Debito', 'tarjeta', 'mercadopago']) {
-        const snap = await db.collection(col).get();
-        snap.forEach(d => tmp.push({ collection: col, id: d.id, data: d.data() || {} }));
-      }
-      if (tmp.length === 0) { adminClientsContainer.textContent = 'Sin registros'; return; }
-      adminClientsContainer.innerHTML = '';
-      tmp.forEach(item => {
+  let adminClientsUnsubs = [];
+  function renderAdminClients(items) {
+    if (!adminClientsContainer) return;
+    if (!items || items.length === 0) { adminClientsContainer.textContent = 'Sin registros'; return; }
+    adminClientsContainer.innerHTML = '';
+    items.forEach(item => {
         const it = item.data;
         const div = document.createElement('div');
         div.className = 'card';
@@ -328,16 +322,33 @@
             msg.textContent = 'Error: ' + (e?.message || e);
           }
         });
-      });
-    } catch (e) {
-      adminClientsContainer.textContent = 'Error: ' + (e?.message || e);
-    }
+    });
   }
-
-  // Cargar al entrar a la pantalla
+  function subscribeAdminClients() {
+    if (!db) { adminClientsContainer.textContent = 'Firestore no configurado'; return; }
+    adminClientsContainer.textContent = 'Cargando...';
+    const perCol = { Debito: [], tarjeta: [], mercadopago: [] };
+    const recompute = () => {
+      const merged = [...perCol.Debito, ...perCol.tarjeta, ...perCol.mercadopago];
+      renderAdminClients(merged);
+    };
+    ['Debito','tarjeta','mercadopago'].forEach(col => {
+      const unsub = db.collection(col).onSnapshot(snap => {
+        perCol[col] = snap.docs.map(d => ({ collection: col, id: d.id, data: d.data() || {} }));
+        recompute();
+      }, err => { adminClientsContainer.textContent = 'Error: ' + (err?.message || err); });
+      adminClientsUnsubs.push(unsub);
+    });
+  }
+  function unsubscribeAdminClients() {
+    adminClientsUnsubs.forEach(u => { try { u(); } catch(_){} });
+    adminClientsUnsubs = [];
+  }
+  // Suscribirse al entrar y limpiar al salir
   document.querySelector('[data-go="admin-clients"]')?.addEventListener('click', () => {
     show('screen-admin-clients');
-    loadAdminClients();
+    unsubscribeAdminClients();
+    subscribeAdminClients();
   });
 
   // Crear CSV (todos)
