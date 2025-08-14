@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alfa Ediciones - Web</title>
-    <link rel="stylesheet" href="styles.css?v=1" />
+    <link rel="stylesheet" href="styles.css?v=2" />
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script defer src="app.js?v=1"></script>
+    <script defer src="app.js?v=2"></script>
 </head>
 <body>
     <header class="topbar">
@@ -140,10 +140,23 @@
                 </div>
                 <div class="row">
                     <button id="listarVentasBtn">Listar ventas</button>
+                    <button id="gestionarClientesBtn" class="primary" data-go="admin-clients">Gestionar clientes</button>
+                </div>
+                <div class="row">
+                    <button id="crearCsvBtn">Crear CSV (todos)</button>
+                    <button id="resetDatosBtn" class="danger">Resetear datos</button>
                 </div>
                 <div id="adminPanelMsg" class="result"></div>
                 <div id="ventasListado" class="result"></div>
                 <div class="row right"><button data-go="menu">Volver</button></div>
+            </div>
+        </section>
+
+        <section id="screen-admin-clients" class="screen">
+            <div class="card">
+                <h2>Clientes (Admin)</h2>
+                <div id="adminClientsContainer" class="result" style="background:#fff;border:1px solid #e2e8f0"></div>
+                <div class="row right"><button data-go="admin-panel">Volver</button></div>
             </div>
         </section>
     </main>
