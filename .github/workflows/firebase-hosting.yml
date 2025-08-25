@@ -25,7 +25,6 @@ jobs:
       - name: Deploy to Firebase Hosting (alfa-206d1)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          firebase deploy --only hosting:alfa-206d1 --project alfa-206d1
+        run: firebase deploy --only hosting:alfa-206d1 --project alfa-206d1
 
 

@@ -1,4 +1,5 @@
-# Alfa Ediciones
+                                                                                                                               # Alfa Ediciones
+                                                                                                                               
 
 Aplicación Android para la gestión de clientes, búsqueda de incobrables, consulta de CUIL, generación de PDF y accesos rápidos a servicios externos como ANSES y BCRA.
 
@@ -323,7 +324,7 @@ cd web
 npx --yes serve -l 5173
 ```
 
-Abre `http://localhost:5173` y prueba búsqueda y cálculo de CUIL.
+Abre `                                                     http://localhost:5173` y prueba búsqueda y cálculo de CUIL.
 
 Si no tienes Node, puedes abrir `web/index.html` en el navegador, pero se recomienda servidor local.
 
