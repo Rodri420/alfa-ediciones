@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentación del Sistema - Alfa Ediciones</title>
+    <link rel="stylesheet" href="styles.css?v=8" />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .doc-container { max-width: 900px; margin: 0 auto; background:#fff; padding: 24px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
+        .doc-container h1 { margin-top: 0; }
+        .doc-container h2 { margin-top: 24px; }
+        .doc-container h3 { margin-top: 18px; }
+        .muted { color:#475569; }
+        .btn { background:#2c3e50; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+        .btn-row { display:flex; gap:8px; justify-content:flex-end; margin: 12px 0; }
+        ul { margin: 6px 0 12px 20px; }
+        code { background:#f1f5f9; padding:2px 6px; border-radius:6px; }
+        pre { background:#0b1020; color:#e5e7eb; padding:12px; border-radius:8px; overflow:auto; }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <div class="btn-row">
+            <a href="./index.html" class="btn" style="background:#bdbdbd;color:#111">Volver</a>
+            <button id="downloadBtn" class="btn">Descargar PDF</button>
+        </div>
+
+        <div id="doc" class="doc-container">
+            <h1>Documentación del Sistema</h1>
+            <p class="muted">Proyecto: Alfa Ediciones • Plataforma: Android + Web (Firebase)</p>
+
+            <h2>1. Resumen</h2>
+            <p>
+                Sistema híbrido (Android + Web) para gestión de clientes, consulta de estado de venta,
+                cálculo de CUIL, generación de PDF y administración centralizada. La sincronización se
+                realiza mediante Firebase (Firestore y Hosting), garantizando acceso desde app móvil y navegador.
+            </p>
+
+            <h2>2. Funcionalidades</h2>
+            <ul>
+                <li>Menú principal: CUIL, Estado de venta, Cargar datos, PDF, enlaces útiles.</li>
+                <li>Estado de venta: consulta por DNI en tiempo real.</li>
+                <li>Cargar datos clientes: alta rápida de ventas (CBU, Tarjeta, MercadoPago).</li>
+                <li>Administrador: listado de ventas, APTO Sí/No, apartados múltiples, devolución por cliente.</li>
+                <li>Web y Android en tiempo real (listeners donde aplica).</li>
+            </ul>
+
+            <h2>3. Arquitectura</h2>
+            <ul>
+                <li>Cliente Android (Kotlin, Jetpack Compose, Room).</li>
+                <li>Cliente Web (HTML, CSS, JS, Firebase SDK compat).</li>
+                <li>Backend-as-a-service: Firebase Firestore, Storage (incobrables), Hosting.</li>
+            </ul>
+
+            <h2>4. Modelo de datos (Firestore)</h2>
+            <ul>
+                <li>Colecciones de ventas: <code>Debito</code>, <code>tarjeta</code>, <code>mercadopago</code></li>
+                <li>Campos comunes: <code>dni</code>, <code>nombreApellido</code>, <code>numeroEquipo</code>, <code>cargo</code>, <code>provincia</code>, <code>celular</code>, <code>vendedorNombre</code>, <code>vendedorCodigo</code>, <code>importeTotal</code>, <code>valorCuota</code>, <code>fechaCreacion</code></li>
+                <li>Campos por método: CBU: <code>cbu</code>; Tarjeta: <code>numeroTarjeta</code>, <code>fechaVencimiento</code>, <code>codigoTarjeta</code>; MP: <code>fechaVenta</code></li>
+                <li>Administración: <code>apto</code> (bool), <code>apartados</code> (array), <code>devolucion</code> (string)</li>
+                <li>Config: <code>config/admin</code> (password), <code>config/app_state</code> (locked)</li>
+            </ul>
+
+            <h2>5. Flujos principales</h2>
+            <h3>5.1 Cargar datos</h3>
+            <ol>
+                <li>Usuario completa formulario (web) o formulario de la app (Android).</li>
+                <li>Se guarda en la colección correspondiente según método de pago.</li>
+                <li>Admin puede ver, marcar APTO/No, definir apartados y dejar devolución.</li>
+            </ol>
+            <h3>5.2 Estado de venta</h3>
+            <ol>
+                <li>Consulta por DNI en colecciones <code>Debito</code>, <code>tarjeta</code>, <code>mercadopago</code>.</li>
+                <li>Se muestran apartados, devolución y si corresponde <strong>No apto venta</strong>.</li>
+            </ol>
+
+            <h2>6. Seguridad (reglas sugeridas)</h2>
+            <p>Reglas iniciales de Firestore para entorno controlado. Ajustar según Auth y roles.</p>
+            <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{col}/{id} {
+      allow read: if col in ['Debito','tarjeta','mercadopago'];
+      allow write: if exists(/databases/$(database)/documents/config/admin)
+                   && get(/databases/$(database)/documents/config/admin).data.allowWrites == true;
+    }
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
+</pre>
+
+            <h2>7. Despliegue</h2>
+            <ul>
+                <li>Web: Firebase Hosting (carpeta <code>web</code>).</li>
+                <li>App: Android Studio (Gradle). JDK 17 recomendado.</li>
+                <li>Comando deploy Hosting:
+                    <pre>"C:\\Program Files\\nodejs\\npx.cmd" firebase deploy --only hosting:alfa-206d1 --project alfa-206d1</pre>
+                </li>
+            </ul>
+
+            <h2>8. Operación</h2>
+            <ul>
+                <li>Admin web: gestionar clientes, resetear datos de clientes, generar CSV.</li>
+                <li>Admin app: idem y actualizar incobrables locales (SQLite) desde Storage.</li>
+                <li>Enlaces útiles: BCRA, ANSES desde menú.</li>
+            </ul>
+
+            <h2>9. Mantenimiento</h2>
+            <ul>
+                <li>Monitorear cuotas de Firestore/Hosting.</li>
+                <li>Revisar reglas de seguridad periódicamente.</li>
+                <li>Backups: exportaciones periódicas de Firestore (opcional).</li>
+            </ul>
+
+            <p class="muted">© Alfa Ediciones</p>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('downloadBtn')?.addEventListener('click', () => {
+            const element = document.getElementById('doc');
+            const opt = {
+                margin:       10,
+                filename:     'Alfa-Ediciones-Documentacion.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        });
+    </script>
+</body>
+</html>
+
+
+
+

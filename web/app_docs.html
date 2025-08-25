@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentación App Android - Alfa Ediciones</title>
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#111; background:#f6f7fb; }
+        .wrap { max-width: 900px; margin: 32px auto; background:#fff; padding: 28px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,.06); }
+        h1 { margin: 0 0 8px; }
+        h2 { margin: 22px 0 8px; }
+        h3 { margin: 16px 0 6px; }
+        p { line-height: 1.5; }
+        ul { margin: 6px 0 12px 18px; }
+        code { background:#f1f5f9; padding:2px 6px; border-radius:6px; }
+        pre { background:#0b1020; color:#e5e7eb; padding:12px; border-radius:8px; overflow:auto; }
+        .muted { color:#475569; }
+        .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Documentación App Android</h1>
+    <p class="muted">Proyecto: Alfa Ediciones • Plataforma: Android (Kotlin, Jetpack Compose, Room) • Backend: Firebase</p>
+
+    <h2>1. Resumen</h2>
+    <p>Aplicación Android para gestión de clientes y ventas con sincronización en Firebase. Incluye cálculo de CUIL, consulta de estado de venta, carga de datos, generación de PDF y panel de administración.</p>
+
+    <h2>2. Funcionalidades principales</h2>
+    <ul>
+        <li>Menú: CUIL, Estado de venta, Cargar datos, PDF, accesos BCRA/ANSES, Administrador.</li>
+        <li>Cargar datos: guarda ventas en Firestore en colecciones <code>Debito</code>, <code>tarjeta</code>, <code>mercadopago</code>.</li>
+        <li>Estado de venta: búsqueda por DNI en tiempo real; muestra apartados, devolución y “No apto venta” si corresponde.</li>
+        <li>Administrador: marca APTO, define apartados múltiples, escribe devolución y lista/gestiona ventas.</li>
+        <li>PDF: genera un ejemplo local con iText (extensible para reportes).</li>
+    </ul>
+
+    <h2>3. Arquitectura (alto nivel)</h2>
+    <ul>
+        <li>UI: Jetpack Compose (pantallas en <code>MainActivity.kt</code>).</li>
+        <li>Datos locales: Room/SQLite (módulo de incobrables). Importación desde Excel (Apache POI).</li>
+        <li>Nube: Firebase (Firestore para ventas y config; Storage para Excel incobrables).</li>
+    </ul>
+
+    <h2>4. Modelo de datos (Firestore)</h2>
+    <ul>
+        <li>Colecciones: <code>Debito</code>, <code>tarjeta</code>, <code>mercadopago</code></li>
+        <li>Campos comunes: <code>dni</code>, <code>nombreApellido</code>, <code>numeroEquipo</code>, <code>cargo</code>, <code>provincia</code>, <code>celular</code>, <code>vendedorNombre</code>, <code>vendedorCodigo</code>, <code>importeTotal</code>, <code>valorCuota</code>, <code>fechaCreacion</code></li>
+        <li>Por método: CBU → <code>cbu</code> • Tarjeta → <code>numeroTarjeta</code>, <code>fechaVencimiento</code>, <code>codigoTarjeta</code> • MP → <code>fechaVenta</code></li>
+        <li>Admin: <code>apto</code> (bool), <code>apartados</code> (array), <code>devolucion</code> (string)</li>
+        <li>Config: <code>config/admin</code> (password), <code>config/app_state</code> (locked)</li>
+    </ul>
+
+    <h2>5. Flujos</h2>
+    <h3>5.1 Cargar datos (ventas)</h3>
+    <ol>
+        <li>Usuario completa formulario (método de pago y datos).</li>
+        <li>La app crea documento en colección según método.</li>
+        <li>Admin gestiona APTO/apartados/devolución.</li>
+    </ol>
+    <h3>5.2 Estado de venta</h3>
+    <ol>
+        <li>Busca por DNI en las 3 colecciones.</li>
+        <li>Muestra apartados seleccionados y devolución; si <code>apto=false</code>, indica “No apto venta”.</li>
+    </ol>
+    <h3>5.3 Administrador</h3>
+    <ul>
+        <li>Lista ventas combinadas (Debito/tarjeta/mercadopago).</li>
+        <li>Setea <code>apto</code>, <code>apartados</code> y <code>devolucion</code> (merge en documento).</li>
+        <li>Acciones: resetear datos de clientes (solo colecciones de ventas); actualizar incobrables locales desde Storage.</li>
+    </ul>
+
+    <h2>6. Dependencias clave</h2>
+    <div class="grid2">
+        <div>
+            <h3>Android</h3>
+            <ul>
+                <li>Compose BOM, Material3, Activity Compose</li>
+                <li>Room (runtime, ktx, compiler)</li>
+                <li>Firebase (Firestore, Auth, Storage, Analytics)</li>
+                <li>Apache POI (Excel), iText (PDF), Coroutines</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Versión mínima</h3>
+            <ul>
+                <li>minSdk 26 • targetSdk 34</li>
+                <li>JDK 17 (Gradle JDK)</li>
+                <li>Compose Compiler ext. 1.5.x</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>7. Seguridad (sugerida)</h2>
+    <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{col}/{id} {
+      allow read: if col in ['Debito','tarjeta','mercadopago'];
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
+</pre>
+
+    <h2>8. Build y despliegue</h2>
+    <ul>
+        <li>Android Studio: Build > Make Project • Run en dispositivo.</li>
+        <li>Incobrables: actualizar desde Admin (descarga Excel desde Storage y repuebla SQLite).</li>
+    </ul>
+
+    <h2>9. Solución de problemas</h2>
+    <ul>
+        <li>JAVA_HOME: usar JDK 17 (Embedded JDK).</li>
+        <li>Daemons Kotlin/Gradle: limpiar <code>.gradle</code>, <code>.kotlin</code>, <code>build/</code> y recompilar.</li>
+        <li>Permisos Android: INTERNET y ubicación (para widgets o funciones que la requieran).</li>
+    </ul>
+
+    <p class="muted">© Alfa Ediciones</p>
+</div>
+</body>
+</html>
+
+
+
+

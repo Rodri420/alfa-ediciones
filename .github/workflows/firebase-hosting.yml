@@ -1,0 +1,31 @@
+name: Deploy Web to Firebase Hosting
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'web/**'
+      - 'firebase.json'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm i -g firebase-tools
+
+      - name: Deploy to Firebase Hosting (alfa-206d1)
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase deploy --only hosting:alfa-206d1 --project alfa-206d1
+
+

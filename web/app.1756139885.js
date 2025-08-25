@@ -118,7 +118,7 @@
   document.getElementById('guardarCargaBtn')?.addEventListener('click', async () => {
     try {
       if (!db) { estadoCarga.textContent = 'Firestore no está configurado.'; return; }
-      const dni = document.getElementById('dniCarga').value.trim();
+      const dni = sanitizeDni(document.getElementById('dniCarga').value);
       const nombre = document.getElementById('nombreCarga').value.trim();
       const numeroEquipo = document.getElementById('numeroEquipo').value.trim();
       const cargo = document.getElementById('cargo').value.trim();
@@ -126,8 +126,8 @@
       const celular = document.getElementById('celular').value.trim();
       const vendedorNombre = document.getElementById('vendedorNombre').value.trim();
       const vendedorCodigo = document.getElementById('vendedorCodigo').value.trim();
-      const importeTotal = (document.getElementById('importeTotal').value || '').toString().trim();
-      const valorCuota = (document.getElementById('valorCuota').value || '').toString().trim();
+      const importeTotal = Number(document.getElementById('importeTotal').value || 0);
+      const valorCuota = Number(document.getElementById('valorCuota').value || 0);
       const metodo = metodoPago.value;
       if (!dni || !nombre || !vendedorNombre) { estadoCarga.textContent = 'Complete DNI, Nombre y Vendedor'; return; }
       const comunes = { dni, nombreApellido: nombre, numeroEquipo, cargo, provincia, celular, vendedorNombre, vendedorCodigo, importeTotal, valorCuota, fechaCreacion: Date.now() };

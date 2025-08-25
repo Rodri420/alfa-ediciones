@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'kotlin-kapt'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -13,8 +14,8 @@ android {
         applicationId "com.example.alfa69"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -64,12 +65,19 @@ dependencies {
     implementation 'androidx.room:room-ktx:2.6.1'
     kapt 'androidx.room:room-compiler:2.6.1'
     
-    // Apache POI para manejar archivos Excel
+    // Apache POI (lectura Excel en otras partes)
     implementation 'org.apache.poi:poi:5.2.3'
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
     
-    // Coroutines para operaciones asíncronas
+    // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-storage'
+    implementation 'com.google.firebase:firebase-analytics'
     
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -79,12 +87,11 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
     
-    // iText7 para la creación de PDF
-    implementation 'com.itextpdf:itext7-core:7.2.5'
+    // iText 7 módulos explícitos para PDF
     implementation 'com.itextpdf:kernel:7.2.5'
     implementation 'com.itextpdf:layout:7.2.5'
     
-    // Para obtener ubicación y clima
+    // Servicios extra
     implementation 'com.google.android.gms:play-services-location:21.0.1'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'

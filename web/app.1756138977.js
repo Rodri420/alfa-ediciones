@@ -118,7 +118,7 @@
   document.getElementById('guardarCargaBtn')?.addEventListener('click', async () => {
     try {
       if (!db) { estadoCarga.textContent = 'Firestore no está configurado.'; return; }
-      const dni = document.getElementById('dniCarga').value.trim();
+      const dni = sanitizeDni(document.getElementById('dniCarga').value);
       const nombre = document.getElementById('nombreCarga').value.trim();
       const numeroEquipo = document.getElementById('numeroEquipo').value.trim();
       const cargo = document.getElementById('cargo').value.trim();
@@ -126,8 +126,8 @@
       const celular = document.getElementById('celular').value.trim();
       const vendedorNombre = document.getElementById('vendedorNombre').value.trim();
       const vendedorCodigo = document.getElementById('vendedorCodigo').value.trim();
-      const importeTotal = (document.getElementById('importeTotal').value || '').toString().trim();
-      const valorCuota = (document.getElementById('valorCuota').value || '').toString().trim();
+      const importeTotal = Number(document.getElementById('importeTotal').value || 0);
+      const valorCuota = Number(document.getElementById('valorCuota').value || 0);
       const metodo = metodoPago.value;
       if (!dni || !nombre || !vendedorNombre) { estadoCarga.textContent = 'Complete DNI, Nombre y Vendedor'; return; }
       const comunes = { dni, nombreApellido: nombre, numeroEquipo, cargo, provincia, celular, vendedorNombre, vendedorCodigo, importeTotal, valorCuota, fechaCreacion: Date.now() };
@@ -144,6 +144,8 @@
         await db.collection('mercadopago').add({ ...comunes, fechaVenta });
       } else if (metodo === 'Cliente Editorial') {
         await db.collection('editorial').add({ ...comunes, editorial: true });
+      } else if (metodo === 'Cliente') {
+        await db.collection('cliente').add({ ...comunes, cliente: true });
       }
       estadoCarga.textContent = 'Guardado con éxito';
     } catch (e) {
@@ -329,12 +331,12 @@
   function subscribeAdminClients() {
     if (!db) { adminClientsContainer.textContent = 'Firestore no configurado'; return; }
     adminClientsContainer.textContent = 'Cargando...';
-    const perCol = { Debito: [], tarjeta: [], mercadopago: [], editorial: [] };
+    const perCol = { Debito: [], tarjeta: [], mercadopago: [], editorial: [], cliente: [] };
     const recompute = () => {
       const merged = [...perCol.Debito, ...perCol.tarjeta, ...perCol.mercadopago, ...perCol.editorial];
       renderAdminClients(merged);
     };
-    ['Debito','tarjeta','mercadopago','editorial'].forEach(col => {
+    ['Debito','tarjeta','mercadopago','editorial','cliente'].forEach(col => {
       const unsub = db.collection(col).onSnapshot(snap => {
         perCol[col] = snap.docs.map(d => ({ collection: col, id: d.id, data: d.data() || {} }));
         recompute();
@@ -359,7 +361,7 @@
     try {
       msg.textContent = 'Creando CSV...';
       const rows = [];
-      for (const col of ['Debito','tarjeta','mercadopago','editorial']) {
+      for (const col of ['Debito','tarjeta','mercadopago','editorial','cliente']) {
         const snap = await db.collection(col).get();
         snap.forEach(d => rows.push({ collection: col, ...(d.data() || {}) }));
       }
@@ -368,14 +370,13 @@
       // No quotear valores que comienzan con '=' para preservar fórmula de texto
       function q(s){ s = String(s||''); return s.startsWith('=') ? s : '"' + s.replace(/"/g,'""') + '"'; }
       rows.forEach(d => {
-        const metodo = d.apartado || (d.cbu ? 'CBU' : (d.numeroTarjeta ? 'Tarjeta' : (d.fechaVenta ? 'MercadoPago' : (d.editorial ? 'Cliente Editorial' : ''))));
+        const metodo = d.apartado || (d.cbu ? 'CBU' : (d.numeroTarjeta ? 'Tarjeta' : (d.fechaVenta ? 'MercadoPago' : (d.editorial ? 'Cliente Editorial' : (d.cliente ? 'Cliente' : '')))));
         let dp1='',dp2='',dp3='';
         if (metodo==='CBU') dp1 = d.cbu ? `="${String(d.cbu)}"` : '';
-        if (metodo==='Tarjeta') { dp1 = d.numeroTarjeta ? `="${String(d.numeroTarjeta)}"` : ''; dp2=d.fechaVencimiento||''; dp3=d.codigoTarjeta||''; }
+        if (metodo==='Tarjeta') { dp1=d.numeroTarjeta||''; dp2=d.fechaVencimiento||''; dp3=d.codigoTarjeta||''; }
         if (metodo==='MercadoPago') dp1=d.fechaVenta||'';
-        if (metodo==='Cliente Editorial') { /* sin datos extra */ }
-        const celularFull = d.celular ? `="${String(d.celular)}"` : '';
-        const arr = [ d.dni, d.nombreApellido, d.provincia, celularFull, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre ].map(q);
+        if (metodo==='Cliente Editorial' || metodo==='Cliente') { /* sin datos extra */ }
+        const arr = [ d.dni, d.nombreApellido, d.provincia, d.celular, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre ].map(q);
         lines.push(arr.join(','));
       });
       const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });

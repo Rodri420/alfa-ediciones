@@ -3,7 +3,8 @@
   // Reemplaza el siguiente objeto con tu configuración de Firebase (Firebase Console -> Project settings -> Your apps -> Web app)
   const firebaseConfig = {
     apiKey: "AIzaSyA-S07R9O403sMdr6NpNAA-EorCfhm5NfI",
-    authDomain: "alfa-206d1.firebaseapp.https://alfa-206d1-default-rtdb.firebaseio.com",
+    authDomain: "alfa-206d1.firebaseapp.com",
+    databaseURL: "https://alfa-206d1-default-rtdb.firebaseio.com",
     projectId: "alfa-206d1",
     storageBucket: "alfa-206d1.firebasestorage.app",
     messagingSenderId: "601425549469",
@@ -118,7 +119,7 @@
   document.getElementById('guardarCargaBtn')?.addEventListener('click', async () => {
     try {
       if (!db) { estadoCarga.textContent = 'Firestore no está configurado.'; return; }
-      const dni = document.getElementById('dniCarga').value.trim();
+      const dni = sanitizeDni(document.getElementById('dniCarga').value);
       const nombre = document.getElementById('nombreCarga').value.trim();
       const numeroEquipo = document.getElementById('numeroEquipo').value.trim();
       const cargo = document.getElementById('cargo').value.trim();
@@ -126,8 +127,8 @@
       const celular = document.getElementById('celular').value.trim();
       const vendedorNombre = document.getElementById('vendedorNombre').value.trim();
       const vendedorCodigo = document.getElementById('vendedorCodigo').value.trim();
-      const importeTotal = (document.getElementById('importeTotal').value || '').toString().trim();
-      const valorCuota = (document.getElementById('valorCuota').value || '').toString().trim();
+      const importeTotal = Number(document.getElementById('importeTotal').value || 0);
+      const valorCuota = Number(document.getElementById('valorCuota').value || 0);
       const metodo = metodoPago.value;
       if (!dni || !nombre || !vendedorNombre) { estadoCarga.textContent = 'Complete DNI, Nombre y Vendedor'; return; }
       const comunes = { dni, nombreApellido: nombre, numeroEquipo, cargo, provincia, celular, vendedorNombre, vendedorCodigo, importeTotal, valorCuota, fechaCreacion: Date.now() };
@@ -371,11 +372,10 @@
         const metodo = d.apartado || (d.cbu ? 'CBU' : (d.numeroTarjeta ? 'Tarjeta' : (d.fechaVenta ? 'MercadoPago' : (d.editorial ? 'Cliente Editorial' : ''))));
         let dp1='',dp2='',dp3='';
         if (metodo==='CBU') dp1 = d.cbu ? `="${String(d.cbu)}"` : '';
-        if (metodo==='Tarjeta') { dp1 = d.numeroTarjeta ? `="${String(d.numeroTarjeta)}"` : ''; dp2=d.fechaVencimiento||''; dp3=d.codigoTarjeta||''; }
+        if (metodo==='Tarjeta') { dp1=d.numeroTarjeta||''; dp2=d.fechaVencimiento||''; dp3=d.codigoTarjeta||''; }
         if (metodo==='MercadoPago') dp1=d.fechaVenta||'';
         if (metodo==='Cliente Editorial') { /* sin datos extra */ }
-        const celularFull = d.celular ? `="${String(d.celular)}"` : '';
-        const arr = [ d.dni, d.nombreApellido, d.provincia, celularFull, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre ].map(q);
+        const arr = [ d.dni, d.nombreApellido, d.provincia, d.celular, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre ].map(q);
         lines.push(arr.join(','));
       });
       const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
