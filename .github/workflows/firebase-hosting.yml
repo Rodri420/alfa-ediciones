@@ -6,6 +6,7 @@ on:
     paths:
       - 'web/**'
       - 'firebase.json'
+      - 'firestore.rules'
 
 jobs:
   deploy:
@@ -22,9 +23,9 @@ jobs:
       - name: Install Firebase CLI
         run: npm i -g firebase-tools
 
-      - name: Deploy to Firebase Hosting (alfa-206d1)
+      - name: Deploy to Firebase (Hosting + Firestore Rules)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: firebase deploy --only hosting:alfa-206d1 --project alfa-206d1
+        run: firebase deploy --only hosting:alfa-206d1,firestore:rules --project alfa-206d1
 
 

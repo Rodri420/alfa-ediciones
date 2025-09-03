@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function appUnlocked() {
+      return get(/databases/$(database)/documents/config/app_state).data.locked != true;
+    }
+
+    // Configuración (admin/app_state). La app cliente necesita leer y escribir.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if true; // Sin Auth, se permite para que el panel funcione
+    }
+
+    // Ventas: Debito
+    match /Debito/{docId} {
+      allow read: if true;
+      allow create: if appUnlocked() &&
+        request.resource.data.dni is string &&
+        request.resource.data.nombreApellido is string &&
+        request.resource.data.vendedorNombre is string &&
+        request.resource.data.importeTotal is string &&
+        request.resource.data.valorCuota is string &&
+        request.resource.data.cbu is string;
+      // Solo permitir actualizar campos del panel admin
+      allow update: if appUnlocked() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
+        (request.resource.data.apto is bool) &&
+        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
+        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
+      allow delete: if false;
+    }
+
+    // Ventas: tarjeta
+    match /tarjeta/{docId} {
+      allow read: if true;
+      allow create: if appUnlocked() &&
+        request.resource.data.dni is string &&
+        request.resource.data.nombreApellido is string &&
+        request.resource.data.vendedorNombre is string &&
+        request.resource.data.importeTotal is string &&
+        request.resource.data.valorCuota is string &&
+        request.resource.data.numeroTarjeta is string &&
+        request.resource.data.fechaVencimiento is string &&
+        request.resource.data.codigoTarjeta is string;
+      allow update: if appUnlocked() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
+        (request.resource.data.apto is bool) &&
+        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
+        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
+      allow delete: if false;
+    }
+
+    // Ventas: mercadopago
+    match /mercadopago/{docId} {
+      allow read: if true;
+      allow create: if appUnlocked() &&
+        request.resource.data.dni is string &&
+        request.resource.data.nombreApellido is string &&
+        request.resource.data.vendedorNombre is string &&
+        request.resource.data.importeTotal is string &&
+        request.resource.data.valorCuota is string &&
+        request.resource.data.fechaVenta is string;
+      allow update: if appUnlocked() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
+        (request.resource.data.apto is bool) &&
+        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
+        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
+      allow delete: if false;
+    }
+
+    // Ventas: editorial (CL)
+    match /editorial/{docId} {
+      allow read: if true;
+      allow create: if appUnlocked() &&
+        request.resource.data.dni is string &&
+        request.resource.data.nombreApellido is string &&
+        request.resource.data.vendedorNombre is string &&
+        request.resource.data.importeTotal is string &&
+        request.resource.data.valorCuota is string;
+      allow update: if appUnlocked() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
+        (request.resource.data.apto is bool) &&
+        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
+        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
+      allow delete: if false;
+    }
+
+    // Denegar todo lo demás
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -142,7 +142,7 @@
       } else if (metodo === 'MercadoPago') {
         const fechaVenta = document.getElementById('fechaVenta').value;
         await db.collection('mercadopago').add({ ...comunes, fechaVenta });
-      } else if (metodo === 'Cliente Editorial') {
+      } else if (metodo === 'CL') {
         await db.collection('editorial').add({ ...comunes, editorial: true });
       }
       estadoCarga.textContent = 'Guardado con éxito';
@@ -368,12 +368,12 @@
       // No quotear valores que comienzan con '=' para preservar fórmula de texto
       function q(s){ s = String(s||''); return s.startsWith('=') ? s : '"' + s.replace(/"/g,'""') + '"'; }
       rows.forEach(d => {
-        const metodo = d.apartado || (d.cbu ? 'CBU' : (d.numeroTarjeta ? 'Tarjeta' : (d.fechaVenta ? 'MercadoPago' : (d.editorial ? 'Cliente Editorial' : ''))));
+        const metodo = d.apartado || (d.cbu ? 'CBU' : (d.numeroTarjeta ? 'Tarjeta' : (d.fechaVenta ? 'MercadoPago' : (d.editorial ? 'CL' : ''))));
         let dp1='',dp2='',dp3='';
         if (metodo==='CBU') dp1 = d.cbu ? `="${String(d.cbu)}"` : '';
         if (metodo==='Tarjeta') { dp1 = d.numeroTarjeta ? `="${String(d.numeroTarjeta)}"` : ''; dp2=d.fechaVencimiento||''; dp3=d.codigoTarjeta||''; }
         if (metodo==='MercadoPago') dp1=d.fechaVenta||'';
-        if (metodo==='Cliente Editorial') { /* sin datos extra */ }
+        if (metodo==='CL') { /* sin datos extra */ }
         const celularFull = d.celular ? `="${String(d.celular)}"` : '';
         const arr = [ d.dni, d.nombreApellido, d.provincia, celularFull, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre ].map(q);
         lines.push(arr.join(','));

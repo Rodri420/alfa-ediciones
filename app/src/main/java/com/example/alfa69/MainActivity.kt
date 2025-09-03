@@ -448,7 +448,7 @@ fun AdminPanelScreen(onBackClick: () -> Unit, startWithChangePassword: Boolean, 
                                                             d.containsKey("cbu") -> "CBU"
                                                             d.containsKey("numeroTarjeta") -> "Tarjeta"
                                                             d.containsKey("fechaVenta") -> "MercadoPago"
-                                                            d.containsKey("editorial") -> "Cliente Editorial"
+                                                            d.containsKey("editorial") -> "CL"
                                                             else -> ""
                                                         }
                                                     // Datos de pago por método
@@ -461,7 +461,7 @@ fun AdminPanelScreen(onBackClick: () -> Unit, startWithChangePassword: Boolean, 
                                                             dp3 = (d["codigoTarjeta"] as? String) ?: ""
                                                         }
                                                         "MercadoPago" -> { dp1 = (d["fechaVenta"] as? String) ?: "" }
-                                                        "Cliente Editorial" -> { /* sin datos extra */ }
+                                                        "CL" -> { /* sin datos extra */ }
                                                     }
                                                     // Forzar valores sensibles como texto en Excel usando fórmula ="..."
                                                     if (metodo == "CBU" && dp1.isNotEmpty()) {
@@ -731,7 +731,7 @@ fun guardarClienteEnFirebase(
             )
             db.collection("mercadopago").add(datos)
         }
-        "Cliente Editorial" -> {
+        "CL" -> {
             val datos = comunes + mapOf(
                 "editorial" to true
             )
@@ -1709,18 +1709,20 @@ fun ClientDataScreen(onBackClick: () -> Unit) {
                         onClick = { metodoPagoSeleccionado = "Tarjeta" }
                     )
                     Text("Tarjeta")
-                    Spacer(modifier = Modifier.width(16.dp))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = metodoPagoSeleccionado == "MercadoPago",
                         onClick = { metodoPagoSeleccionado = "MercadoPago" }
                     )
-                    Text("Mercado Pago")
+                    Text("Mercado Pago (MP)")
                     Spacer(modifier = Modifier.width(16.dp))
                     RadioButton(
-                        selected = metodoPagoSeleccionado == "Cliente Editorial",
-                        onClick = { metodoPagoSeleccionado = "Cliente Editorial" }
+                        selected = metodoPagoSeleccionado == "CL",
+                        onClick = { metodoPagoSeleccionado = "CL" }
                     )
-                    Text("Cliente Editorial")
+                    Text("CL")
                 }
 
                 if (metodoPagoSeleccionado == "CBU") {
@@ -1763,7 +1765,7 @@ fun ClientDataScreen(onBackClick: () -> Unit) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                         modifier = Modifier.fillMaxWidth()
                     )
-                } else if (metodoPagoSeleccionado == "Cliente Editorial") {
+                } else if (metodoPagoSeleccionado == "CL") {
                     // No datos adicionales obligatorios
                 }
 
@@ -1803,7 +1805,7 @@ fun ClientDataScreen(onBackClick: () -> Unit) {
                         "CBU" -> if (cbu.isEmpty()) { errorMessage = "El CBU es obligatorio"; showErrorMessage = true; return false }
                         "Tarjeta" -> if (numeroTarjeta.isEmpty() || fechaVencimiento.isEmpty() || codigoTarjeta.isEmpty()) { errorMessage = "Complete los datos de la tarjeta"; showErrorMessage = true; return false }
                         "MercadoPago" -> if (fechaVenta.isEmpty()) { errorMessage = "Ingrese la fecha de la venta"; showErrorMessage = true; return false }
-                        "Cliente Editorial" -> { /* sin campos adicionales obligatorios */ }
+                        "CL" -> { /* sin campos adicionales obligatorios */ }
                         else -> { errorMessage = "Seleccione un método de pago"; showErrorMessage = true; return false }
                     }
                     return true
