@@ -401,6 +401,18 @@
       adminPanelMsg.textContent = 'Reseteando datos...';
       // Habilitar borrado en reglas
       await db.collection('config').doc('admin').set({ resetEnabled: true }, { merge: true });
+      // Confirmar que el flag está visible antes de borrar (hasta 10 intentos, 100ms)
+      try {
+        let ok = false;
+        for (let i = 0; i < 10; i++) {
+          const snap = await db.collection('config').doc('admin').get();
+          if (snap.exists && snap.data() && snap.data().resetEnabled === true) { ok = true; break; }
+          await new Promise(r => setTimeout(r, 100));
+        }
+        if (!ok) throw new Error('No se pudo confirmar resetEnabled en Firestore');
+      } catch (e) {
+        throw e;
+      }
       let totalBorrados = 0;
       for (const col of ['Debito','tarjeta','mercadopago']) {
         const snap = await db.collection(col).get();
