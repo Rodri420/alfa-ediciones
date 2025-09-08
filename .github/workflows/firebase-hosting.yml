@@ -29,15 +29,18 @@ jobs:
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > ${GITHUB_WORKSPACE}/gcp-key.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/gcp-key.json" >> $GITHUB_ENV
 
-      - name: Deploy to Firebase (Hosting + Firestore Rules)
+      - name: Deploy to Firebase with Service Account
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        run: |
+          echo "Using Service Account via GOOGLE_APPLICATION_CREDENTIALS"
+          firebase deploy --only hosting:alfa-206d1,firestore:rules --project alfa-206d1
+
+      - name: Deploy to Firebase with FIREBASE_TOKEN (fallback)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT == '' }}
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
-          if [ -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
-            echo "Using Service Account via GOOGLE_APPLICATION_CREDENTIALS"
-          else
-            echo "Service Account not set. Falling back to FIREBASE_TOKEN"
-          fi
+          echo "Service Account not set. Falling back to FIREBASE_TOKEN"
           firebase deploy --only hosting:alfa-206d1,firestore:rules --project alfa-206d1
 
 
