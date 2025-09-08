@@ -20,19 +20,19 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Auth via Service Account (google-github-actions/auth@v2)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+
       - name: Install Firebase CLI
         run: npm i -g firebase-tools
-
-      - name: Use Service Account if available
-        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
-        run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > ${GITHUB_WORKSPACE}/gcp-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/gcp-key.json" >> $GITHUB_ENV
 
       - name: Deploy to Firebase with Service Account
         if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
         run: |
-          echo "Using Service Account via GOOGLE_APPLICATION_CREDENTIALS"
+          echo "Using Service Account via google-github-actions/auth@v2"
           firebase deploy --only hosting:alfa-206d1,firestore:rules --project alfa-206d1
 
       - name: Deploy to Firebase with FIREBASE_TOKEN (fallback)
