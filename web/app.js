@@ -3,7 +3,7 @@
   // Reemplaza el siguiente objeto con tu configuración de Firebase (Firebase Console -> Project settings -> Your apps -> Web app)
   const firebaseConfig = {
     apiKey: "AIzaSyA-S07R9O403sMdr6NpNAA-EorCfhm5NfI",
-    authDomain: "alfa-206d1.firebaseapp.https://alfa-206d1-default-rtdb.firebaseio.com",
+    authDomain: "alfa-206d1.firebaseapp.com",
     projectId: "alfa-206d1",
     storageBucket: "alfa-206d1.firebasestorage.app",
     messagingSenderId: "601425549469",
@@ -246,8 +246,14 @@
   function renderAdminClients(items) {
     if (!adminClientsContainer) return;
     if (!items || items.length === 0) { adminClientsContainer.textContent = 'Sin registros'; return; }
+    // Orden descendente por fechaCreacion (últimos arriba). Si falta, cae a 0
+    const sorted = [...items].sort((a, b) => {
+      const fa = Number(a.data.fechaCreacion || 0);
+      const fb = Number(b.data.fechaCreacion || 0);
+      return fb - fa;
+    });
     adminClientsContainer.innerHTML = '';
-    items.forEach(item => {
+    sorted.forEach(item => {
         const it = item.data;
         const div = document.createElement('div');
         div.className = 'card';
@@ -363,7 +369,7 @@
         const snap = await db.collection(col).get();
         snap.forEach(d => rows.push({ collection: col, ...(d.data() || {}) }));
       }
-      const header = ['DNI','NombreApellido','Provincia','Celular','ImporteTotal','ValorCuota','MetodoPago','DatosPago1','DatosPago2','DatosPago3','VendedorNombre'];
+      const header = ['DNI','NombreApellido','Provincia','Celular','ImporteTotal','ValorCuota','MetodoPago','DatosPago1','DatosPago2','DatosPago3','VendedorNombre','Devolucion'];
       const lines = [ 'sep=,', header.join(',') ];
       // No quotear valores que comienzan con '=' para preservar fórmula de texto
       function q(s){ s = String(s||''); return s.startsWith('=') ? s : '"' + s.replace(/"/g,'""') + '"'; }
@@ -375,7 +381,7 @@
         if (metodo==='MercadoPago') dp1=d.fechaVenta||'';
         if (metodo==='CL') { /* sin datos extra */ }
         const celularFull = d.celular ? `="${String(d.celular)}"` : '';
-        const arr = [ d.dni, d.nombreApellido, d.provincia, celularFull, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre ].map(q);
+        const arr = [ d.dni, d.nombreApellido, d.provincia, celularFull, d.importeTotal, d.valorCuota, metodo, dp1, dp2, dp3, d.vendedorNombre, (d.devolucion || '') ].map(q);
         lines.push(arr.join(','));
       });
       const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -393,6 +399,8 @@
   resetDatosBtn?.addEventListener('click', async () => {
     try {
       adminPanelMsg.textContent = 'Reseteando datos...';
+      // Habilitar borrado en reglas
+      await db.collection('config').doc('admin').set({ resetEnabled: true }, { merge: true });
       let totalBorrados = 0;
       for (const col of ['Debito','tarjeta','mercadopago']) {
         const snap = await db.collection(col).get();
@@ -408,6 +416,9 @@
       adminPanelMsg.textContent = `Datos reseteados. Documentos borrados: ${totalBorrados}`;
     } catch (e) {
       adminPanelMsg.textContent = 'Error al resetear: ' + (e?.message || e);
+    } finally {
+      // Deshabilitar borrado en reglas
+      try { await db.collection('config').doc('admin').set({ resetEnabled: false }, { merge: true }); } catch(_){}
     }
   });
 })();

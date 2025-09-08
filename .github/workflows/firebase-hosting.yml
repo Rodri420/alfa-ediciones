@@ -23,9 +23,21 @@ jobs:
       - name: Install Firebase CLI
         run: npm i -g firebase-tools
 
+      - name: Use Service Account if available
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > ${GITHUB_WORKSPACE}/gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/gcp-key.json" >> $GITHUB_ENV
+
       - name: Deploy to Firebase (Hosting + Firestore Rules)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: firebase deploy --only hosting:alfa-206d1,firestore:rules --project alfa-206d1
+        run: |
+          if [ -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+            echo "Using Service Account via GOOGLE_APPLICATION_CREDENTIALS"
+          else
+            echo "Service Account not set. Falling back to FIREBASE_TOKEN"
+          fi
+          firebase deploy --only hosting:alfa-206d1,firestore:rules --project alfa-206d1
 
 
