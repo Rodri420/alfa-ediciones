@@ -414,15 +414,27 @@
         throw e;
       }
       let totalBorrados = 0;
-      for (const col of ['Debito','tarjeta','mercadopago']) {
+      for (const col of ['Debito','tarjeta','mercadopago','editorial']) {
         const snap = await db.collection(col).get();
         const refs = snap.docs.map(d => d.ref);
         while (refs.length) {
           const chunk = refs.splice(0, 400);
           const batch = db.batch();
           chunk.forEach(ref => batch.delete(ref));
-          await batch.commit();
-          totalBorrados += chunk.length;
+          try {
+            await batch.commit();
+            totalBorrados += chunk.length;
+          } catch (e) {
+            // Fallback a borrado individual para diagnosticar permisos
+            for (const ref of chunk) {
+              try {
+                await ref.delete();
+                totalBorrados += 1;
+              } catch (e2) {
+                throw new Error(`Permiso denegado al borrar ${col}/${ref.id}: ${e2?.code || e2?.message || e2}`);
+              }
+            }
+          }
         }
       }
       adminPanelMsg.textContent = `Datos reseteados. Documentos borrados: ${totalBorrados}`;
