@@ -636,17 +636,28 @@ fun AdminPanelScreen(onBackClick: () -> Unit, startWithChangePassword: Boolean, 
                             resetting = true
                             resetMsg = "Reseteando datos..."
                             val db = FirebaseFirestore.getInstance()
-                            // Borrar colecciones Debito y tarjeta
-                            val borrarColeccion: (String, () -> Unit) -> Unit = { nombre, onDone ->
-                                db.collection(nombre).get()
-                                    .addOnSuccessListener { snap ->
-                                        val batch = db.batch()
-                                        snap.documents.forEach { d -> batch.delete(d.reference) }
-                                        batch.commit().addOnSuccessListener { onDone() }.addOnFailureListener { onDone() }
-                                    }
-                                    .addOnFailureListener { onDone() }
+
+                            // Borrado por lotes (evita límite de 500 operaciones)
+                            fun borrarColeccionEnLotes(nombre: String, tamLote: Int = 300, onDone: () -> Unit) {
+                                fun borrarLote() {
+                                    db.collection(nombre).limit(tamLote.toLong()).get()
+                                        .addOnSuccessListener { snap ->
+                                            if (snap.isEmpty) {
+                                                onDone()
+                                            } else {
+                                                val batch = db.batch()
+                                                snap.documents.forEach { d -> batch.delete(d.reference) }
+                                                batch.commit()
+                                                    .addOnSuccessListener { borrarLote() }
+                                                    .addOnFailureListener { _ -> borrarLote() }
+                                            }
+                                        }
+                                        .addOnFailureListener { _ -> onDone() }
+                                }
+                                borrarLote()
                             }
-                            var pendientes = 2
+
+                            var pendientes = 3
                             val doneParte = {
                                 pendientes -= 1
                                 if (pendientes == 0) {
@@ -657,13 +668,18 @@ fun AdminPanelScreen(onBackClick: () -> Unit, startWithChangePassword: Boolean, 
                                         try { dao.eliminarTodos() } catch (_: Exception) {}
                                         withContext(Dispatchers.Main) {
                                             resetting = false
-                                            resetMsg = "Datos reseteados"
+                                            resetMsg = "Datos reseteados (servidor y local)"
                                         }
                                     }
+                                } else {
+                                    resetMsg = "Reseteando... quedan $pendientes colecciones"
                                 }
+                                Unit
                             }
-                            borrarColeccion("Debito", doneParte)
-                            borrarColeccion("tarjeta", doneParte)
+
+                            borrarColeccionEnLotes("Debito", onDone = doneParte)
+                            borrarColeccionEnLotes("tarjeta", onDone = doneParte)
+                            borrarColeccionEnLotes("mercadopago", onDone = doneParte)
                         }
                     },
                     shape = RoundedCornerShape(20.dp),
