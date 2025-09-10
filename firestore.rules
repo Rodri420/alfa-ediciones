@@ -28,7 +28,7 @@ service cloud.firestore {
         (request.resource.data.apto is bool) &&
         (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
         (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
     }
 
     // Ventas: tarjeta
@@ -48,7 +48,7 @@ service cloud.firestore {
         (request.resource.data.apto is bool) &&
         (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
         (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
     }
 
     // Ventas: mercadopago
@@ -66,7 +66,7 @@ service cloud.firestore {
         (request.resource.data.apto is bool) &&
         (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
         (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
     }
 
     // Ventas: editorial (CL)
@@ -83,7 +83,7 @@ service cloud.firestore {
         (request.resource.data.apto is bool) &&
         (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
         (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
     }
 
     // Denegar todo lo demás
