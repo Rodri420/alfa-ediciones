@@ -16,59 +16,24 @@ service cloud.firestore {
 
 
 
-    // Ventas: tarjeta
+    // Ventas: Debito (libre)
+    match /Debito/{docId} {
+      allow read, write: if true;
+    }
+
+    // Ventas: tarjeta (libre)
     match /tarjeta/{docId} {
-      allow read: if true;
-      allow create: if appUnlocked() &&
-        request.resource.data.dni is string &&
-        request.resource.data.nombreApellido is string &&
-        request.resource.data.vendedorNombre is string &&
-        request.resource.data.importeTotal is string &&
-        request.resource.data.valorCuota is string &&
-        request.resource.data.numeroTarjeta is string &&
-        request.resource.data.fechaVencimiento is string &&
-        request.resource.data.codigoTarjeta is string;
-      allow update: if appUnlocked() &&
-        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
-        (request.resource.data.apto is bool) &&
-        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
-        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow read, write: if true;
     }
 
-    // Ventas: mercadopago
+    // Ventas: mercadopago (libre)
     match /mercadopago/{docId} {
-      allow read: if true;
-      allow create: if appUnlocked() &&
-        request.resource.data.dni is string &&
-        request.resource.data.nombreApellido is string &&
-        request.resource.data.vendedorNombre is string &&
-        request.resource.data.importeTotal is string &&
-        request.resource.data.valorCuota is string &&
-        request.resource.data.fechaVenta is string;
-      allow update: if appUnlocked() &&
-        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
-        (request.resource.data.apto is bool) &&
-        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
-        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow read, write: if true;
     }
 
-    // Ventas: editorial (CL)
+    // Ventas: editorial (CL) (libre)
     match /editorial/{docId} {
-      allow read: if true;
-      allow create: if appUnlocked() &&
-        request.resource.data.dni is string &&
-        request.resource.data.nombreApellido is string &&
-        request.resource.data.vendedorNombre is string &&
-        request.resource.data.importeTotal is string &&
-        request.resource.data.valorCuota is string;
-      allow update: if appUnlocked() &&
-        request.resource.data.diff(resource.data).changedKeys().hasOnly(['apto','apartados','devolucion']) &&
-        (request.resource.data.apto is bool) &&
-        (request.resource.data.apartados == null || request.resource.data.apartados is list) &&
-        (request.resource.data.devolucion == null || request.resource.data.devolucion is string);
-      allow delete: if (request.auth != null && request.auth.token.admin == true) || get(/databases/$(database)/documents/config/admin).data.resetEnabled == true;
+      allow read, write: if true;
     }
 
     // Denegar todo lo demás
