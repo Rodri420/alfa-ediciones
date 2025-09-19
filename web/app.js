@@ -48,6 +48,19 @@
     return (dni + '').replace(/\D/g, '').slice(0, 8);
   }
 
+  // Normaliza distintos tipos de fecha (number, string, Firestore Timestamp)
+  function toMillis(v) {
+    if (v == null) return 0;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') { const n = Number(v); return Number.isNaN(n) ? 0 : n; }
+    // Firestore Timestamp (compat): tiene toMillis() o seconds/nanoseconds
+    try {
+      if (v && typeof v.toMillis === 'function') return v.toMillis();
+      if (v && typeof v.seconds === 'number') return (v.seconds * 1000) + (v.nanoseconds ? (v.nanoseconds / 1e6) : 0);
+    } catch(_) {}
+    return 0;
+  }
+
   function calculateCuil(dni, gender) {
     dni = sanitizeDni(dni);
     if (dni.length < 7) return 'El DNI debe tener 7 u 8 dígitos.';
@@ -190,7 +203,8 @@
     try {
       const pass = adminPasswordInput.value;
       const docSnap = await db.collection('config').doc('admin').get();
-      const current = docSnap.exists ? docSnap.data().password : 'samuelyolde1234';
+      const data = docSnap.exists ? (docSnap.data() || {}) : {};
+      const current = data.password || 'samuelyolde1234';
       if (pass === current) {
         adminLoginMsg.textContent = 'OK';
         show('screen-admin-panel');
@@ -248,8 +262,8 @@
     if (!items || items.length === 0) { adminClientsContainer.textContent = 'Sin registros'; return; }
     // Orden descendente por fechaCreacion (últimos arriba). Si falta, cae a 0
     const sorted = [...items].sort((a, b) => {
-      const fa = Number(a.data.fechaCreacion || 0);
-      const fb = Number(b.data.fechaCreacion || 0);
+      const fa = toMillis(a.data.fechaCreacion);
+      const fb = toMillis(b.data.fechaCreacion);
       return fb - fa;
     });
     adminClientsContainer.innerHTML = '';
